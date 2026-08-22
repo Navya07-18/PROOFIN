@@ -19,6 +19,7 @@ import {
   Utensils,
   Scissors,
   Ticket,
+  Camera,
 } from "lucide-react";
 
 interface DigitalTicketProps {
@@ -150,7 +151,7 @@ export function DigitalTicket({ reservation, onCheckInClick }: DigitalTicketProp
           <div className="grid grid-cols-2 gap-4 bg-charcoal-50/70 p-4 rounded-2xl border border-charcoal-100 text-xs">
             <div>
               <span className="text-[10px] text-charcoal-400 font-medium uppercase tracking-wider block">
-                Reservation Hours
+                Event Hours (IST)
               </span>
               <span className="font-bold text-charcoal-900 block mt-0.5">
                 {reservation.eventDate} ({reservation.eventTimeRange})
@@ -159,10 +160,10 @@ export function DigitalTicket({ reservation, onCheckInClick }: DigitalTicketProp
 
             <div>
               <span className="text-[10px] text-charcoal-400 font-medium uppercase tracking-wider block">
-                Check-in Window
+                Registration / Check-in Cutoff
               </span>
               <span className="font-bold text-indigo-700 block mt-0.5">
-                {reservation.checkInTimeWindow}
+                {reservation.checkInTimeWindow.split("-")[1] || reservation.checkInTimeWindow}
               </span>
             </div>
 
@@ -203,10 +204,10 @@ export function DigitalTicket({ reservation, onCheckInClick }: DigitalTicketProp
 
             <div className="mt-3 flex flex-col items-center gap-1.5 text-center">
               {getStatusBadge()}
-              <p className="text-[11px] text-charcoal-500 max-w-[250px] leading-relaxed">
+              <p className="text-[11px] text-charcoal-500 max-w-[260px] leading-relaxed">
                 {reservation.status === "CHECKED_IN"
-                  ? "✓ Verified! 100% of your deposit has been returned to your wallet."
-                  : `Present QR or check in between ${reservation.checkInTimeWindow} to claim your deposit back.`}
+                  ? "✓ Verified by Organizer! 100% of your deposit has been returned to your wallet."
+                  : `Show this QR code to the Event Organizer or Receptionist at venue to scan & refund your ${reservation.depositAmount} MON.`}
               </p>
             </div>
           </div>
@@ -215,11 +216,11 @@ export function DigitalTicket({ reservation, onCheckInClick }: DigitalTicketProp
           <div className="space-y-2 pt-1">
             {reservation.status === "RESERVED" && (
               <Link
-                href={`/checkin?ticket=${reservation.id}`}
+                href={`/checkin?ticket=${reservation.id}&mode=organizer`}
                 className="w-full flex items-center justify-center gap-2 bg-charcoal-900 hover:bg-charcoal-800 text-white font-bold py-3.5 px-4 rounded-xl text-xs shadow-lg shadow-charcoal-900/10 transition-all active:scale-[0.99]"
               >
-                <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-                <span>Check In Now (Release {reservation.depositAmount} MON)</span>
+                <Camera className="w-3.5 h-3.5 text-amber-300" />
+                <span>Open Organizer Scanner to Scan QR</span>
                 <ArrowRight className="w-3.5 h-3.5 ml-auto" />
               </Link>
             )}
