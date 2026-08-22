@@ -21,6 +21,7 @@ interface WalletContextType {
   updateReservationStatus: (eventId: number, status: "RESERVED" | "CHECKED_IN" | "NO_SHOW", txHash?: string) => void;
   addEvent: (event: EventData) => void;
   getSigner: () => Promise<ethers.Signer | null>;
+  refreshBalance: () => Promise<void>;
 }
 
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
@@ -67,6 +68,12 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       }
     }
   }, []);
+
+  const refreshBalance = async () => {
+    if (account) {
+      await updateBalance(account);
+    }
+  };
 
   const handleAccountsChanged = useCallback(
     (accounts: string[]) => {
@@ -137,10 +144,8 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
 
     setIsConnecting(true);
     try {
-      // Clear manual disconnect lock
       localStorage.removeItem(LOCAL_STORAGE_KEY_DISCONNECTED);
 
-      // Force MetaMask extension popup to open on right side of browser
       try {
         await window.ethereum.request({
           method: "wallet_requestPermissions",
@@ -150,7 +155,6 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         if (permErr.code === 4001 || permErr.message?.includes("user rejected")) {
           throw permErr;
         }
-        // Fallback to eth_requestAccounts
         await window.ethereum.request({
           method: "eth_requestAccounts",
         });
@@ -233,6 +237,11 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       } catch (e) {}
       return updated;
     });
+
+    // Refresh wallet balance after locking deposit
+    if (account) {
+      setTimeout(() => updateBalance(account), 1500);
+    }
   };
 
   const updateReservationStatus = (
@@ -273,6 +282,11 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         } catch (e) {}
         return updated;
       });
+
+      // Refresh balance after deposit refund
+      if (account) {
+        setTimeout(() => updateBalance(account), 1500);
+      }
     }
   };
 
@@ -303,6 +317,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         updateReservationStatus,
         addEvent,
         getSigner,
+        refreshBalance,
       }}
     >
       {children}
