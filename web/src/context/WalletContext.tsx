@@ -137,17 +137,23 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
 
     setIsConnecting(true);
     try {
-      // Clear manual disconnect flag
+      // Clear manual disconnect lock
       localStorage.removeItem(LOCAL_STORAGE_KEY_DISCONNECTED);
 
-      // Force MetaMask extension window to pop up on the right side for manual approval
+      // Force MetaMask extension popup to open on right side of browser
       try {
         await window.ethereum.request({
           method: "wallet_requestPermissions",
           params: [{ eth_accounts: {} }],
         });
-      } catch (permError: any) {
-        console.warn("Wallet permissions prompt dismissed or fallback needed:", permError);
+      } catch (permErr: any) {
+        if (permErr.code === 4001 || permErr.message?.includes("user rejected")) {
+          throw permErr;
+        }
+        // Fallback to eth_requestAccounts
+        await window.ethereum.request({
+          method: "eth_requestAccounts",
+        });
       }
 
       const accounts = await window.ethereum.request({
@@ -172,15 +178,14 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
           console.warn("User declined network switch");
         }
       }
-    } catch (error) {
-      console.error("Failed to connect wallet:", error);
+    } catch (error: any) {
+      console.warn("User cancelled or failed to connect wallet:", error);
     } finally {
       setIsConnecting(false);
     }
   };
 
   const disconnectWallet = () => {
-    // Set manual disconnect flag in storage
     try {
       localStorage.setItem(LOCAL_STORAGE_KEY_DISCONNECTED, "true");
     } catch (e) {}
