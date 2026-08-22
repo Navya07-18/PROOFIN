@@ -27,6 +27,7 @@ const WalletContext = createContext<WalletContextType | undefined>(undefined);
 
 const LOCAL_STORAGE_KEY_RES = "proofin_reservations_v1";
 const LOCAL_STORAGE_KEY_EVENTS = "proofin_events_v1";
+const LOCAL_STORAGE_KEY_DISCONNECTED = "proofin_wallet_disconnected";
 
 export function WalletProvider({ children }: { children: React.ReactNode }) {
   const [account, setAccount] = useState<string | null>(null);
@@ -67,36 +68,47 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const handleAccountsChanged = useCallback((accounts: string[]) => {
-    if (accounts.length === 0) {
-      setAccount(null);
-      setBalance("0.000");
-    } else {
-      setAccount(accounts[0]);
-      updateBalance(accounts[0]);
-    }
-  }, [updateBalance]);
+  const handleAccountsChanged = useCallback(
+    (accounts: string[]) => {
+      const isDisconnected = localStorage.getItem(LOCAL_STORAGE_KEY_DISCONNECTED) === "true";
+      if (isDisconnected || accounts.length === 0) {
+        setAccount(null);
+        setBalance("0.000");
+      } else {
+        setAccount(accounts[0]);
+        updateBalance(accounts[0]);
+      }
+    },
+    [updateBalance]
+  );
 
-  const handleChainChanged = useCallback((chainIdHex: string) => {
-    const decChainId = parseInt(chainIdHex, 16);
-    setChainId(decChainId);
-    if (account) {
-      updateBalance(account);
-    }
-  }, [account, updateBalance]);
+  const handleChainChanged = useCallback(
+    (chainIdHex: string) => {
+      const decChainId = parseInt(chainIdHex, 16);
+      setChainId(decChainId);
+      if (account) {
+        updateBalance(account);
+      }
+    },
+    [account, updateBalance]
+  );
 
   // Initial wallet check on mount
   useEffect(() => {
     if (typeof window !== "undefined" && window.ethereum) {
-      window.ethereum
-        .request({ method: "eth_accounts" })
-        .then((accounts: string[]) => {
-          if (accounts.length > 0) {
-            setAccount(accounts[0]);
-            updateBalance(accounts[0]);
-          }
-        })
-        .catch(console.error);
+      const isDisconnected = localStorage.getItem(LOCAL_STORAGE_KEY_DISCONNECTED) === "true";
+
+      if (!isDisconnected) {
+        window.ethereum
+          .request({ method: "eth_accounts" })
+          .then((accounts: string[]) => {
+            if (accounts.length > 0) {
+              setAccount(accounts[0]);
+              updateBalance(accounts[0]);
+            }
+          })
+          .catch(console.error);
+      }
 
       window.ethereum
         .request({ method: "eth_chainId" })
@@ -125,6 +137,9 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
 
     setIsConnecting(true);
     try {
+      // Clear manual disconnect flag on explicit connect action
+      localStorage.removeItem(LOCAL_STORAGE_KEY_DISCONNECTED);
+
       const accounts = await window.ethereum.request({
         method: "eth_requestAccounts",
       });
@@ -138,7 +153,6 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       const currentChainId = parseInt(hexChain, 16);
       setChainId(currentChainId);
 
-      // If not on Monad Testnet, prompt to switch
       if (currentChainId !== MONAD_TESTNET.chainId) {
         try {
           await switchToMonadTestnet();
@@ -156,6 +170,11 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   };
 
   const disconnectWallet = () => {
+    // Set manual disconnect flag in storage
+    try {
+      localStorage.setItem(LOCAL_STORAGE_KEY_DISCONNECTED, "true");
+    } catch (e) {}
+
     setAccount(null);
     setBalance("0.000");
   };
@@ -184,7 +203,6 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       return updated;
     });
 
-    // Also update spot reserved count on event
     setEvents((prev) => {
       const updated = prev.map((ev) => {
         if (ev.id === res.eventId) {
@@ -224,7 +242,6 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       return updated;
     });
 
-    // Update checkedIn count on event
     if (status === "CHECKED_IN") {
       setEvents((prev) => {
         const updated = prev.map((ev) => {

@@ -16,6 +16,9 @@ import {
   QrCode as QrIcon,
   ArrowRight,
   Sparkles,
+  Utensils,
+  Scissors,
+  Ticket,
 } from "lucide-react";
 
 interface DigitalTicketProps {
@@ -27,7 +30,6 @@ export function DigitalTicket({ reservation, onCheckInClick }: DigitalTicketProp
   const [qrCodeUrl, setQrCodeUrl] = useState<string>("");
 
   useEffect(() => {
-    // Generate QR payload containing ticket ID and attendee wallet
     const payload = JSON.stringify({
       ticketId: reservation.id,
       eventId: reservation.eventId,
@@ -54,14 +56,14 @@ export function DigitalTicket({ reservation, onCheckInClick }: DigitalTicketProp
         return (
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 shadow-sm">
             <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
-            🔵 CHECKED IN
+            🔵 CHECKED IN (DEPOSIT RELEASED)
           </span>
         );
       case "NO_SHOW":
         return (
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">
             <span className="w-2 h-2 rounded-full bg-rose-500" />
-            🔴 NO SHOW
+            🔴 NO SHOW (DEPOSIT FORFEITED)
           </span>
         );
       case "RESERVED":
@@ -69,7 +71,30 @@ export function DigitalTicket({ reservation, onCheckInClick }: DigitalTicketProp
         return (
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200/80 shadow-sm">
             <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-            🟡 RESERVED
+            🟡 RESERVED (DEPOSIT LOCKED)
+          </span>
+        );
+    }
+  };
+
+  const getCategoryBadge = () => {
+    switch (reservation.categoryType) {
+      case "RESTAURANT":
+        return (
+          <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-amber-500/20 text-amber-200 border border-amber-400/30">
+            <Utensils className="w-3 h-3" /> Dining Table
+          </span>
+        );
+      case "SALON":
+        return (
+          <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-purple-500/20 text-purple-200 border border-purple-400/30">
+            <Scissors className="w-3 h-3" /> Salon Appointment
+          </span>
+        );
+      default:
+        return (
+          <span className="flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-indigo-500/20 text-indigo-200 border border-indigo-400/30">
+            <Ticket className="w-3 h-3" /> Event Pass
           </span>
         );
     }
@@ -77,12 +102,10 @@ export function DigitalTicket({ reservation, onCheckInClick }: DigitalTicketProp
 
   return (
     <div className="relative w-full max-w-md mx-auto group">
-      {/* Glow Effect */}
       <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500/20 via-purple-500/20 to-blue-500/20 rounded-[32px] blur-xl opacity-75 group-hover:opacity-100 transition duration-500" />
 
-      {/* Main Ticket Surface */}
       <div className="relative bg-white/90 backdrop-blur-2xl rounded-[28px] border border-white shadow-ticket overflow-hidden transition-all duration-300">
-        {/* Ticket Header */}
+        {/* Header */}
         <div className="bg-gradient-to-r from-charcoal-900 via-charcoal-800 to-indigo-950 text-white p-6 relative overflow-hidden">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -93,9 +116,7 @@ export function DigitalTicket({ reservation, onCheckInClick }: DigitalTicketProp
                 PROOFIN PASS
               </span>
             </div>
-            <span className="font-mono text-[10px] text-indigo-200 font-semibold bg-white/10 px-2 py-0.5 rounded-full backdrop-blur-sm">
-              {reservation.id}
-            </span>
+            {getCategoryBadge()}
           </div>
 
           <div className="mt-4">
@@ -108,7 +129,7 @@ export function DigitalTicket({ reservation, onCheckInClick }: DigitalTicketProp
             </p>
           </div>
 
-          {/* Spot Number Pill */}
+          {/* Spot Number */}
           <div className="absolute top-4 right-4 text-right">
             <div className="px-3 py-1 bg-white text-charcoal-900 rounded-xl font-bold text-xs shadow-md">
               SPOT #{reservation.spotNumber}
@@ -125,32 +146,14 @@ export function DigitalTicket({ reservation, onCheckInClick }: DigitalTicketProp
 
         {/* Ticket Body */}
         <div className="p-6 pt-2 space-y-5">
-          {/* Key Details Grid */}
+          {/* Key Details */}
           <div className="grid grid-cols-2 gap-4 bg-charcoal-50/70 p-4 rounded-2xl border border-charcoal-100 text-xs">
             <div>
               <span className="text-[10px] text-charcoal-400 font-medium uppercase tracking-wider block">
-                Date & Time
+                Reservation Hours
               </span>
               <span className="font-bold text-charcoal-900 block mt-0.5">
-                {reservation.eventDate} · {reservation.eventTime}
-              </span>
-            </div>
-
-            <div>
-              <span className="text-[10px] text-charcoal-400 font-medium uppercase tracking-wider block">
-                Commitment
-              </span>
-              <span className="font-bold text-indigo-600 block mt-0.5">
-                {reservation.depositAmount} MON (Locked)
-              </span>
-            </div>
-
-            <div>
-              <span className="text-[10px] text-charcoal-400 font-medium uppercase tracking-wider block">
-                Attendee
-              </span>
-              <span className="font-mono text-charcoal-700 block mt-0.5 truncate">
-                {shortenAddress(reservation.attendee)}
+                {reservation.eventDate} ({reservation.eventTimeRange})
               </span>
             </div>
 
@@ -158,13 +161,31 @@ export function DigitalTicket({ reservation, onCheckInClick }: DigitalTicketProp
               <span className="text-[10px] text-charcoal-400 font-medium uppercase tracking-wider block">
                 Check-in Window
               </span>
-              <span className="font-semibold text-charcoal-800 block mt-0.5">
-                Before {reservation.checkInDeadline}
+              <span className="font-bold text-indigo-700 block mt-0.5">
+                {reservation.checkInTimeWindow}
+              </span>
+            </div>
+
+            <div>
+              <span className="text-[10px] text-charcoal-400 font-medium uppercase tracking-wider block">
+                Locked MON
+              </span>
+              <span className="font-bold text-indigo-600 block mt-0.5">
+                {reservation.depositAmount} MON
+              </span>
+            </div>
+
+            <div>
+              <span className="text-[10px] text-charcoal-400 font-medium uppercase tracking-wider block">
+                Attendee Wallet
+              </span>
+              <span className="font-mono text-charcoal-700 block mt-0.5 truncate">
+                {shortenAddress(reservation.attendee)}
               </span>
             </div>
           </div>
 
-          {/* QR Code Container */}
+          {/* QR Code */}
           <div className="flex flex-col items-center justify-center p-5 bg-white rounded-2xl border border-charcoal-200/60 shadow-inner">
             {qrCodeUrl ? (
               <div className="relative group/qr p-2 bg-white rounded-xl shadow-sm">
@@ -182,48 +203,20 @@ export function DigitalTicket({ reservation, onCheckInClick }: DigitalTicketProp
 
             <div className="mt-3 flex flex-col items-center gap-1.5 text-center">
               {getStatusBadge()}
-              <p className="text-[11px] text-charcoal-500 max-w-[240px]">
+              <p className="text-[11px] text-charcoal-500 max-w-[250px] leading-relaxed">
                 {reservation.status === "CHECKED_IN"
-                  ? "✓ Attendance verified. Deposit released to your wallet."
-                  : `Present this QR at check-in or submit on-chain before ${reservation.checkInDeadline}`}
+                  ? "✓ Verified! 100% of your deposit has been returned to your wallet."
+                  : `Present QR or check in between ${reservation.checkInTimeWindow} to claim your deposit back.`}
               </p>
             </div>
           </div>
 
-          {/* Lifecycle State Visual Bar */}
-          <div className="bg-charcoal-50/80 p-3 rounded-xl border border-charcoal-200/40 text-xs">
-            <div className="flex items-center justify-between text-[11px] font-semibold text-charcoal-600 mb-1.5">
-              <span>On-Chain Commitment State</span>
-              <span className="text-indigo-600">
-                {reservation.status === "CHECKED_IN"
-                  ? "Settled (Released)"
-                  : "Locked in Contract"}
-              </span>
-            </div>
-            <div className="flex items-center gap-1">
-              <div className="h-1.5 flex-1 bg-emerald-500 rounded-full" title="Spot Reserved" />
-              <div className="h-1.5 flex-1 bg-emerald-500 rounded-full" title="Deposit Locked" />
-              <div
-                className={`h-1.5 flex-1 rounded-full ${
-                  reservation.status === "CHECKED_IN" ? "bg-emerald-500" : "bg-amber-400 animate-pulse"
-                }`}
-                title="Check-In"
-              />
-              <div
-                className={`h-1.5 flex-1 rounded-full ${
-                  reservation.status === "CHECKED_IN" ? "bg-emerald-500" : "bg-charcoal-200"
-                }`}
-                title="Deposit Released"
-              />
-            </div>
-          </div>
-
-          {/* Explorer Links & Actions */}
+          {/* Action */}
           <div className="space-y-2 pt-1">
             {reservation.status === "RESERVED" && (
               <Link
                 href={`/checkin?ticket=${reservation.id}`}
-                className="w-full flex items-center justify-center gap-2 bg-charcoal-900 hover:bg-charcoal-800 text-white font-bold py-3 px-4 rounded-xl text-xs shadow-lg shadow-charcoal-900/10 transition-all active:scale-[0.99]"
+                className="w-full flex items-center justify-center gap-2 bg-charcoal-900 hover:bg-charcoal-800 text-white font-bold py-3.5 px-4 rounded-xl text-xs shadow-lg shadow-charcoal-900/10 transition-all active:scale-[0.99]"
               >
                 <Sparkles className="w-3.5 h-3.5 text-amber-300" />
                 <span>Check In Now (Release {reservation.depositAmount} MON)</span>
@@ -236,21 +229,9 @@ export function DigitalTicket({ reservation, onCheckInClick }: DigitalTicketProp
                 href={getExplorerTxUrl(reservation.txHash)}
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-center justify-center gap-1.5 text-xs text-charcoal-500 hover:text-indigo-600 transition-colors py-1.5 font-medium"
+                className="flex items-center justify-center gap-1.5 text-xs text-charcoal-500 hover:text-indigo-600 transition-colors py-1 font-medium"
               >
-                <span>View Reservation on Monad Explorer</span>
-                <ExternalLink className="w-3 h-3" />
-              </a>
-            )}
-
-            {reservation.checkInTxHash && (
-              <a
-                href={getExplorerTxUrl(reservation.checkInTxHash)}
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center justify-center gap-1.5 text-xs text-emerald-600 hover:underline py-1 font-semibold"
-              >
-                <span>View Settlement Transaction on Monadscan</span>
+                <span>View Deposit Tx on Monadscan</span>
                 <ExternalLink className="w-3 h-3" />
               </a>
             )}

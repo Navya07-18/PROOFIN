@@ -14,11 +14,12 @@ import {
   ShieldCheck,
   ArrowLeft,
   ArrowRight,
-  ExternalLink,
   Lock,
-  Sparkles,
-  Info,
   CheckCircle2,
+  AlertTriangle,
+  Utensils,
+  Scissors,
+  Ticket,
 } from "lucide-react";
 import { shortenAddress } from "@/lib/monad";
 
@@ -40,15 +41,26 @@ export default function EventDetailPage() {
     Math.round((event.reservedCount / event.capacity) * 100)
   );
 
+  const getCategoryIcon = () => {
+    switch (event.categoryType) {
+      case "RESTAURANT":
+        return <Utensils className="w-5 h-5 text-indigo-600 flex-shrink-0" />;
+      case "SALON":
+        return <Scissors className="w-5 h-5 text-purple-600 flex-shrink-0" />;
+      default:
+        return <Ticket className="w-5 h-5 text-indigo-600 flex-shrink-0" />;
+    }
+  };
+
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-      {/* Back button */}
+      {/* Back Link */}
       <Link
         href="/"
         className="inline-flex items-center gap-2 text-xs font-semibold text-charcoal-500 hover:text-charcoal-900 transition-colors"
       >
         <ArrowLeft className="w-4 h-4" />
-        <span>Back to Events</span>
+        <span>Back to Discovery</span>
       </Link>
 
       {/* Hero Banner Card */}
@@ -69,7 +81,7 @@ export default function EventDetailPage() {
             </span>
             {event.isFeatured && (
               <span className="px-3 py-1 bg-indigo-600 rounded-full text-xs font-bold uppercase tracking-wider text-white shadow-md">
-                Featured Event
+                Featured
               </span>
             )}
           </div>
@@ -85,25 +97,31 @@ export default function EventDetailPage() {
         </div>
       </div>
 
-      {/* Main Grid: Details + Reservation Action Card */}
+      {/* Main Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Left: Event Details & Policies */}
+        {/* Left Info Column */}
         <div className="lg:col-span-7 space-y-6">
           <GlassCard className="p-6 space-y-4">
-            <h2 className="text-lg font-bold text-charcoal-900">About this Event</h2>
+            <h2 className="text-lg font-bold text-charcoal-900">About this Listing</h2>
             <p className="text-xs sm:text-sm text-charcoal-600 leading-relaxed">
               {event.description}
             </p>
           </GlassCard>
 
-          {/* Location & Time Info */}
-          <GlassCard className="p-6 space-y-4">
-            <h3 className="text-base font-bold text-charcoal-900">Schedule & Venue</h3>
+          {/* Timing & Check-In Window Card */}
+          <GlassCard className="p-6 space-y-4 border-indigo-100">
+            <h3 className="text-base font-bold text-charcoal-900 flex items-center gap-2">
+              {getCategoryIcon()}
+              <span>Schedule & Check-In Window</span>
+            </h3>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
               <div className="flex items-start gap-3 bg-charcoal-50/70 p-3.5 rounded-xl border border-charcoal-100">
                 <Calendar className="w-5 h-5 text-indigo-600 flex-shrink-0 mt-0.5" />
                 <div>
-                  <span className="text-charcoal-400 block text-[10px]">Date</span>
+                  <span className="text-charcoal-400 block text-[10px] uppercase font-bold">
+                    Reservation Date
+                  </span>
                   <span className="font-bold text-charcoal-800">{event.eventDate}</span>
                 </div>
               </div>
@@ -111,27 +129,36 @@ export default function EventDetailPage() {
               <div className="flex items-start gap-3 bg-charcoal-50/70 p-3.5 rounded-xl border border-charcoal-100">
                 <Clock className="w-5 h-5 text-indigo-600 flex-shrink-0 mt-0.5" />
                 <div>
-                  <span className="text-charcoal-400 block text-[10px]">Event Time</span>
-                  <span className="font-bold text-charcoal-800">{event.eventTime}</span>
+                  <span className="text-charcoal-400 block text-[10px] uppercase font-bold">
+                    Reservation Hours
+                  </span>
+                  <span className="font-bold text-charcoal-800">{event.eventTimeRange}</span>
                 </div>
               </div>
 
-              <div className="flex items-start gap-3 bg-charcoal-50/70 p-3.5 rounded-xl border border-charcoal-100 sm:col-span-2">
-                <MapPin className="w-5 h-5 text-indigo-600 flex-shrink-0 mt-0.5" />
+              <div className="flex items-start gap-3 bg-indigo-50/80 p-3.5 rounded-xl border border-indigo-100 sm:col-span-2">
+                <Clock className="w-5 h-5 text-indigo-700 flex-shrink-0 mt-0.5" />
                 <div>
-                  <span className="text-charcoal-400 block text-[10px]">Location</span>
-                  <span className="font-bold text-charcoal-800">{event.location}</span>
+                  <span className="text-indigo-600 block text-[10px] uppercase font-bold">
+                    Strict Check-In Window
+                  </span>
+                  <span className="font-bold text-indigo-900 text-sm">
+                    {event.checkInTimeWindow}
+                  </span>
+                  <p className="text-[11px] text-indigo-700/90 mt-0.5">
+                    Check-in is permitted only between {event.checkInTimeWindow}. Show up during this window to claim your spot and get your deposit refunded.
+                  </p>
                 </div>
               </div>
             </div>
           </GlassCard>
 
-          {/* Commitment & No-Show Policy Card */}
-          <GlassCard className="p-6 space-y-4 border-indigo-100 bg-indigo-50/40">
+          {/* Guarantee Card */}
+          <GlassCard className="p-6 space-y-4 bg-emerald-50/40 border-emerald-100">
             <div className="flex items-center gap-2">
-              <ShieldCheck className="w-5 h-5 text-indigo-600" />
+              <ShieldCheck className="w-5 h-5 text-emerald-600" />
               <h3 className="text-base font-bold text-charcoal-900">
-                Smart Contract Commitment Policy
+                Smart Contract Commitment Rules
               </h3>
             </div>
 
@@ -139,32 +166,23 @@ export default function EventDetailPage() {
               <div className="flex items-start gap-2.5">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
                 <span>
-                  <strong>100% Refundable Deposit:</strong> Your commitment deposit of{" "}
-                  <strong>{event.depositAmount} MON</strong> is held securely by the smart
-                  contract and released back to your wallet immediately when you check in.
+                  <strong>100% Refundable Deposit:</strong> Your deposit of{" "}
+                  <strong>{event.depositAmount} MON</strong> is locked safely in the smart contract and returned to your wallet upon check-in.
                 </span>
               </div>
 
               <div className="flex items-start gap-2.5">
-                <Info className="w-4 h-4 text-indigo-600 flex-shrink-0 mt-0.5" />
+                <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
                 <span>
-                  <strong>Check-in Deadline:</strong> Attendees must check in before{" "}
-                  <strong>{event.checkInDeadline}</strong>.
-                </span>
-              </div>
-
-              <div className="flex items-start gap-2.5">
-                <Lock className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
-                <span>
-                  <strong>No-Show Rule:</strong> Unverified reservations past deadline are
-                  forfeited to the organizer/event pool to protect capacity.
+                  <strong>No-Show Rule:</strong> If you do not check in before{" "}
+                  <strong>{event.checkInTimeWindow.split("-")[1] || event.checkInTimeWindow}</strong>, the deposit is forfeited to the business/organizer to protect unused capacity.
                 </span>
               </div>
             </div>
           </GlassCard>
         </div>
 
-        {/* Right: Reservation Checkout Card */}
+        {/* Right Checkout Card */}
         <div className="lg:col-span-5">
           <div className="sticky top-24">
             <GlassCard variant="elevated" className="p-6 space-y-6 border-indigo-200/70">
@@ -182,11 +200,11 @@ export default function EventDetailPage() {
                 </span>
               </div>
 
-              {/* Spots Progress Bar */}
+              {/* Progress */}
               <div className="space-y-2 bg-charcoal-50 p-4 rounded-2xl border border-charcoal-100">
                 <div className="flex items-center justify-between text-xs font-semibold">
-                  <span className="text-charcoal-700">Available Spots</span>
-                  <span className={spotsLeft <= 5 ? "text-rose-600 font-bold" : "text-indigo-600"}>
+                  <span className="text-charcoal-700">Spots / Tables Remaining</span>
+                  <span className={spotsLeft <= 3 ? "text-rose-600 font-bold" : "text-indigo-600"}>
                     {event.reservedCount} / {event.capacity} reserved ({spotsLeft} left)
                   </span>
                 </div>
@@ -198,7 +216,7 @@ export default function EventDetailPage() {
                 </div>
               </div>
 
-              {/* Organizer Meta */}
+              {/* Host info */}
               <div className="pt-2 border-t border-charcoal-100 flex items-center justify-between text-xs">
                 <div>
                   <span className="text-charcoal-400 block text-[10px]">Hosted by</span>
@@ -214,13 +232,13 @@ export default function EventDetailPage() {
                 <div className="space-y-3">
                   <div className="bg-indigo-50 border border-indigo-200 text-indigo-800 p-3.5 rounded-xl text-xs flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4 text-indigo-600 flex-shrink-0" />
-                    <span>You already reserved <strong>Spot #{userReservation.spotNumber}</strong>!</span>
+                    <span>You reserved <strong>Spot #{userReservation.spotNumber}</strong>!</span>
                   </div>
                   <Link
                     href={`/ticket/${userReservation.id}`}
                     className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 px-4 rounded-xl text-xs shadow-lg shadow-indigo-600/25 transition-all"
                   >
-                    <span>View Digital Ticket</span>
+                    <span>View Digital Pass</span>
                     <ArrowRight className="w-4 h-4" />
                   </Link>
                 </div>
@@ -229,20 +247,20 @@ export default function EventDetailPage() {
                   disabled
                   className="w-full bg-charcoal-100 text-charcoal-400 font-bold py-3.5 px-4 rounded-xl text-xs cursor-not-allowed"
                 >
-                  Event Full (Sold Out)
+                  Fully Booked
                 </button>
               ) : (
                 <button
                   onClick={() => setIsModalOpen(true)}
                   className="w-full flex items-center justify-center gap-2 bg-charcoal-900 hover:bg-charcoal-800 text-white font-bold py-4 px-6 rounded-2xl text-sm shadow-xl shadow-charcoal-900/15 transition-all hover:-translate-y-0.5 active:scale-[0.99]"
                 >
-                  <span>RESERVE MY SPOT ({event.depositAmount} MON)</span>
+                  <span>RESERVE SPOT ({event.depositAmount} MON)</span>
                   <ArrowRight className="w-4 h-4 text-indigo-300" />
                 </button>
               )}
 
               <p className="text-[11px] text-charcoal-400 text-center">
-                Instant confirmation on Monad Testnet with &lt; 800ms finality.
+                Requires manual transaction approval in your MetaMask extension.
               </p>
             </GlassCard>
           </div>

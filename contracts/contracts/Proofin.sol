@@ -6,18 +6,16 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
  * @title Proofin
- * @notice Web3 Reservation & Commitment Platform on Monad Testnet.
- * Users reserve limited spots by locking a MON commitment deposit, get checked in on-chain,
- * and automatically receive their deposit back when they attend.
+ * @notice Web3 Reservation & Commitment Platform on Monad Testnet for Events, Restaurants, and Salons.
+ * Users reserve spots by locking a MON commitment deposit, check in within a strict time window,
+ * and automatically get their deposit refunded. No-shows forfeit their deposit.
  *
  * Tagline: Reserve it. Show up. Get your deposit back.
  */
 contract Proofin is ReentrancyGuard, Ownable {
 
-    // --- Enums & Structs ---
-
     enum NoShowPolicy {
-        ORGANIZER,      // Forfeited deposits go to event organizer
+        ORGANIZER,      // Forfeited deposits go to event organizer/business owner
         COMMUNITY_POOL  // Forfeited deposits go to community pool / platform
     }
 
@@ -28,15 +26,22 @@ contract Proofin is ReentrancyGuard, Ownable {
         NO_SHOW
     }
 
+    struct EventTimings {
+        uint64 startTime;        // e.g. 9:00 AM
+        uint64 endTime;          // e.g. 4:00 PM
+        uint64 checkInStartTime;// e.g. 9:30 AM
+        uint64 checkInEndTime;  // e.g. 11:00 AM
+    }
+
     struct EventInfo {
         uint256 id;
         address payable organizer;
         string title;
+        string category; // "EVENT", "RESTAURANT", "SALON"
         string description;
         string location;
         string imageURI;
-        uint64 eventTime;
-        uint64 checkInDeadline;
+        EventTimings timings;
         uint256 depositAmount;
         uint32 capacity;
         uint32 reservedCount;
@@ -78,10 +83,11 @@ contract Proofin is ReentrancyGuard, Ownable {
         uint256 indexed eventId,
         address indexed organizer,
         string title,
+        string category,
         uint256 depositAmount,
         uint32 capacity,
-        uint64 eventTime,
-        uint64 checkInDeadline,
+        uint64 startTime,
+        uint64 checkInEndTime,
         NoShowPolicy policy
     );
 
@@ -124,11 +130,12 @@ contract Proofin is ReentrancyGuard, Ownable {
     error EventFull();
     error AlreadyReserved();
     error IncorrectDeposit(uint256 expected, uint256 received);
-    error CheckInDeadlinePassed();
+    error CheckInNotOpen();
+    error CheckInWindowPassed();
     error ReservationNotFound();
     error AlreadyCheckedIn();
     error AlreadySettled();
-    error DeadlineNotPassed();
+    error CheckInWindowNotClosed();
     error Unauthorized();
     error InvalidParameters();
     error TransferFailed();
@@ -137,35 +144,37 @@ contract Proofin is ReentrancyGuard, Ownable {
         communityPool = _communityPool != address(0) ? _communityPool : payable(msg.sender);
     }
 
-    // --- External / Public Functions ---
-
     /**
-     * @notice Create a new reservation event with required commitment deposit.
+     * @notice Create a new reservation listing (Event, Restaurant, Salon).
      */
     function createEvent(
         string calldata title,
+        string calldata category,
         string calldata description,
         string calldata location,
         string calldata imageURI,
-        uint64 eventTime,
-        uint64 checkInDeadline,
+        uint64 startTime,
+        uint64 endTime,
+        uint64 checkInStartTime,
+        uint64 checkInEndTime,
         uint256 depositAmount,
         uint32 capacity,
         NoShowPolicy policy
     ) external returns (uint256 eventId) {
         if (capacity == 0) revert InvalidParameters();
-        if (checkInDeadline > eventTime + 1 days) revert InvalidParameters();
+        if (endTime <= startTime) revert InvalidParameters();
+        if (checkInEndTime <= checkInStartTime) revert InvalidParameters();
 
         eventId = _nextEventId++;
         EventInfo storage ev = events[eventId];
         ev.id = eventId;
         ev.organizer = payable(msg.sender);
         ev.title = title;
+        ev.category = category;
         ev.description = description;
         ev.location = location;
         ev.imageURI = imageURI;
-        ev.eventTime = eventTime;
-        ev.checkInDeadline = checkInDeadline;
+        ev.timings = EventTimings(startTime, endTime, checkInStartTime, checkInEndTime);
         ev.depositAmount = depositAmount;
         ev.capacity = capacity;
         ev.active = true;
@@ -175,23 +184,23 @@ contract Proofin is ReentrancyGuard, Ownable {
             eventId,
             msg.sender,
             title,
+            category,
             depositAmount,
             capacity,
-            eventTime,
-            checkInDeadline,
+            startTime,
+            checkInEndTime,
             policy
         );
     }
 
     /**
-     * @notice Reserve a spot in an event by locking the required MON deposit.
-     * @param eventId The ID of the event to reserve.
+     * @notice Reserve a spot or table/slot by locking exact required MON deposit.
      */
     function reserveSpot(uint256 eventId) external payable nonReentrant {
         EventInfo storage ev = events[eventId];
         if (ev.id == 0) revert EventNotFound();
         if (!ev.active) revert EventInactive();
-        if (block.timestamp > ev.checkInDeadline) revert CheckInDeadlinePassed();
+        if (block.timestamp > ev.timings.checkInEndTime) revert CheckInWindowPassed();
         if (ev.reservedCount >= ev.capacity) revert EventFull();
         if (msg.value != ev.depositAmount) revert IncorrectDeposit(ev.depositAmount, msg.value);
 
@@ -215,9 +224,7 @@ contract Proofin is ReentrancyGuard, Ownable {
     }
 
     /**
-     * @notice Check in at the event on-chain and automatically release the locked deposit back to caller.
-     * @dev Enforces caller is the reservation owner. Uses Checks-Effects-Interactions pattern.
-     * @param eventId The ID of the event.
+     * @notice Check in within the strict check-in window [checkInStartTime, checkInEndTime].
      */
     function checkIn(uint256 eventId) external nonReentrant {
         EventInfo storage ev = events[eventId];
@@ -227,9 +234,10 @@ contract Proofin is ReentrancyGuard, Ownable {
         if (res.status == ReservationStatus.NONE) revert ReservationNotFound();
         if (res.status == ReservationStatus.CHECKED_IN) revert AlreadyCheckedIn();
         if (res.status == ReservationStatus.NO_SHOW) revert AlreadySettled();
-        if (block.timestamp > ev.checkInDeadline + 2 hours) revert CheckInDeadlinePassed();
 
-        // Update state before external transfer (CEI)
+        if (block.timestamp < ev.timings.checkInStartTime) revert CheckInNotOpen();
+        if (block.timestamp > ev.timings.checkInEndTime) revert CheckInWindowPassed();
+
         res.status = ReservationStatus.CHECKED_IN;
         ev.checkedInCount += 1;
 
@@ -245,14 +253,12 @@ contract Proofin is ReentrancyGuard, Ownable {
     }
 
     /**
-     * @notice Process no-show after the check-in deadline has passed.
-     * @param eventId The event ID.
-     * @param attendee The address of the attendee who failed to check in.
+     * @notice Process no-show AFTER checkInEndTime has passed.
      */
     function processNoShow(uint256 eventId, address attendee) external nonReentrant {
         EventInfo storage ev = events[eventId];
         if (ev.id == 0) revert EventNotFound();
-        if (block.timestamp <= ev.checkInDeadline) revert DeadlineNotPassed();
+        if (block.timestamp <= ev.timings.checkInEndTime) revert CheckInWindowNotClosed();
 
         Reservation storage res = reservations[eventId][attendee];
         if (res.status == ReservationStatus.NONE) revert ReservationNotFound();
@@ -272,37 +278,6 @@ contract Proofin is ReentrancyGuard, Ownable {
         }
     }
 
-    /**
-     * @notice Batch process no-shows for an event.
-     */
-    function batchProcessNoShows(uint256 eventId, address[] calldata attendees) external nonReentrant {
-        EventInfo storage ev = events[eventId];
-        if (ev.id == 0) revert EventNotFound();
-        if (block.timestamp <= ev.checkInDeadline) revert DeadlineNotPassed();
-
-        address payable recipient = (ev.policy == NoShowPolicy.ORGANIZER) ? ev.organizer : communityPool;
-        uint256 totalDeposit = 0;
-
-        for (uint256 i = 0; i < attendees.length; i++) {
-            address attendee = attendees[i];
-            Reservation storage res = reservations[eventId][attendee];
-            if (res.status == ReservationStatus.RESERVED) {
-                res.status = ReservationStatus.NO_SHOW;
-                ev.noShowCount += 1;
-                totalDeposit += res.depositAmount;
-                emit NoShowProcessed(eventId, attendee, res.depositAmount, recipient, uint64(block.timestamp));
-            }
-        }
-
-        if (totalDeposit > 0) {
-            (bool success, ) = recipient.call{value: totalDeposit}("");
-            if (!success) revert TransferFailed();
-        }
-    }
-
-    /**
-     * @notice Organizer can toggle active status of an event.
-     */
     function setEventActive(uint256 eventId, bool active) external {
         EventInfo storage ev = events[eventId];
         if (ev.id == 0) revert EventNotFound();
@@ -312,9 +287,6 @@ contract Proofin is ReentrancyGuard, Ownable {
         emit EventStatusToggled(eventId, active);
     }
 
-    /**
-     * @notice Admin update of community pool address.
-     */
     function setCommunityPool(address payable newPool) external onlyOwner {
         if (newPool == address(0)) revert InvalidParameters();
         communityPool = newPool;
@@ -345,6 +317,5 @@ contract Proofin is ReentrancyGuard, Ownable {
         return _nextEventId - 1;
     }
 
-    // Allow contract to receive native MON
     receive() external payable {}
 }

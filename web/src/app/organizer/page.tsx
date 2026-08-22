@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { useWallet } from "@/context/WalletContext";
 import { GlassCard } from "@/components/GlassCard";
-import { EventData, AttendeeRecord, NoShowPolicy } from "@/types";
+import { EventData, AttendeeRecord, NoShowPolicy, CategoryType } from "@/types";
 import { getExplorerTxUrl, shortenAddress, shortenTxHash } from "@/lib/monad";
 import {
   LayoutDashboard,
@@ -18,11 +18,12 @@ import {
   MapPin,
   X,
   Lock,
-  DollarSign,
-  ShieldCheck,
+  Utensils,
+  Scissors,
+  Ticket,
+  Clock,
 } from "lucide-react";
 
-// Mock sample attendees for the organizer view
 const INITIAL_ATTENDEES: AttendeeRecord[] = [
   {
     wallet: "0x7a39Fd6e51aad88F6F4ce6aB8827279cffFb9226",
@@ -64,14 +65,6 @@ const INITIAL_ATTENDEES: AttendeeRecord[] = [
     deposit: "0.01 MON",
     txHash: "0x4481029481029481029481029481029481029481029481029481029481029481",
   },
-  {
-    wallet: "0xba5Ed099633D3B313e4D5F7bdc1305d3c28ba5Ed",
-    spot: 6,
-    reservedAt: "Today, 01:00 PM",
-    status: "RESERVED",
-    deposit: "0.01 MON",
-    txHash: "0x5581029481029481029481029481029481029481029481029481029481029481",
-  },
 ];
 
 export default function OrganizerDashboardPage() {
@@ -79,21 +72,22 @@ export default function OrganizerDashboardPage() {
   const [selectedEventId, setSelectedEventId] = useState<number>(events[0]?.id || 1);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState<boolean>(false);
 
-  // New Event Form State
+  // New Listing Form State
   const [newTitle, setNewTitle] = useState("");
+  const [newCategoryType, setNewCategoryType] = useState<CategoryType>("EVENT");
+  const [newCategoryLabel, setNewCategoryLabel] = useState("TECH WORKSHOP");
   const [newDescription, setNewDescription] = useState("");
   const [newLocation, setNewLocation] = useState("");
   const [newImageURI, setNewImageURI] = useState("");
-  const [newEventDate, setNewEventDate] = useState("");
-  const [newEventTime, setNewEventTime] = useState("");
-  const [newDeadline, setNewDeadline] = useState("");
+  const [newEventDate, setNewEventDate] = useState("Aug 23, 2026");
+  const [newTimeRange, setNewTimeRange] = useState("9:00 AM - 4:00 PM IST");
+  const [newCheckInWindow, setNewCheckInWindow] = useState("9:30 AM - 11:00 AM IST");
   const [newDeposit, setNewDeposit] = useState("0.01");
   const [newCapacity, setNewCapacity] = useState("50");
   const [newPolicy, setNewPolicy] = useState<NoShowPolicy>("ORGANIZER");
 
   const selectedEvent = events.find((e) => e.id === selectedEventId) || events[0];
 
-  // Calculated Metrics
   const totalSeats = selectedEvent?.capacity || 50;
   const reservedCount = selectedEvent?.reservedCount || 42;
   const checkedInCount = selectedEvent?.checkedInCount || 38;
@@ -118,17 +112,18 @@ export default function OrganizerDashboardPage() {
     const created: EventData = {
       id: Date.now(),
       title: newTitle,
-      category: "COMMUNITY EVENT",
-      description: newDescription || "Community reservation event on Monad Testnet.",
+      category: newCategoryLabel || newCategoryType,
+      categoryType: newCategoryType,
+      description: newDescription || "Programmable reservation on Monad Testnet.",
       location: newLocation,
       organizer: account || "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
-      organizerName: "Event Organizer",
+      organizerName: "Business / Organizer",
       imageURI:
         newImageURI ||
         "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=1200&q=80",
-      eventDate: newEventDate || "Tomorrow",
-      eventTime: newEventTime || "5:00 PM IST",
-      checkInDeadline: newDeadline || "4:45 PM IST",
+      eventDate: newEventDate || "Aug 23, 2026",
+      eventTimeRange: newTimeRange || "9:00 AM - 4:00 PM IST",
+      checkInTimeWindow: newCheckInWindow || "9:30 AM - 11:00 AM IST",
       depositAmount: newDeposit || "0.01",
       depositAmountWei: (parseFloat(newDeposit || "0.01") * 1e18).toString(),
       capacity: parseInt(newCapacity || "50"),
@@ -143,7 +138,6 @@ export default function OrganizerDashboardPage() {
     setSelectedEventId(created.id);
     setIsCreateModalOpen(false);
 
-    // Reset Form
     setNewTitle("");
     setNewDescription("");
     setNewLocation("");
@@ -156,13 +150,13 @@ export default function OrganizerDashboardPage() {
         <div>
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-charcoal-900 text-white rounded-full text-xs font-semibold">
             <LayoutDashboard className="w-3.5 h-3.5 text-indigo-400" />
-            <span>Organizer Console</span>
+            <span>Business & Organizer Console</span>
           </div>
           <h1 className="text-3xl font-black text-charcoal-900 tracking-tight mt-1.5">
-            Event Management & Settlement
+            Events, Restaurants & Salons Dashboard
           </h1>
           <p className="text-xs text-charcoal-500">
-            Real-time capacity tracking, attendance verification, and smart contract escrow analytics.
+            Monitor reservation commitments, check-in time windows, and deposit refunds.
           </p>
         </div>
 
@@ -171,11 +165,11 @@ export default function OrganizerDashboardPage() {
           className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2.5 rounded-xl text-xs shadow-md shadow-indigo-600/20 transition-all active:scale-[0.99]"
         >
           <PlusCircle className="w-4 h-4" />
-          <span>Create New Event</span>
+          <span>Create New Listing</span>
         </button>
       </div>
 
-      {/* Event Selector Tabs */}
+      {/* Selector Tabs */}
       <div className="flex items-center gap-2 overflow-x-auto pb-2">
         {events.map((ev) => (
           <button
@@ -187,23 +181,21 @@ export default function OrganizerDashboardPage() {
                 : "bg-white text-charcoal-700 border-charcoal-200 hover:bg-charcoal-50"
             }`}
           >
-            {ev.title}
+            {ev.title} ({ev.categoryType})
           </button>
         ))}
       </div>
 
-      {/* METRICS ROW (Linear Solid Style) */}
+      {/* METRICS ROW */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-        {/* Total Seats */}
         <div className="bg-white border border-charcoal-200/80 rounded-2xl p-5 shadow-sm space-y-1">
           <span className="text-[11px] font-bold text-charcoal-400 uppercase tracking-wider block">
-            Total Seats
+            Capacity
           </span>
           <div className="text-3xl font-black text-charcoal-900">{totalSeats}</div>
-          <p className="text-[11px] text-charcoal-500">Event capacity</p>
+          <p className="text-[11px] text-charcoal-500">Total spots/tables</p>
         </div>
 
-        {/* Reserved */}
         <div className="bg-white border border-charcoal-200/80 rounded-2xl p-5 shadow-sm space-y-1">
           <span className="text-[11px] font-bold text-indigo-600 uppercase tracking-wider block">
             Reserved
@@ -212,31 +204,60 @@ export default function OrganizerDashboardPage() {
           <p className="text-[11px] text-indigo-600 font-medium">Spots committed on-chain</p>
         </div>
 
-        {/* Checked In */}
         <div className="bg-white border border-charcoal-200/80 rounded-2xl p-5 shadow-sm space-y-1">
           <span className="text-[11px] font-bold text-emerald-600 uppercase tracking-wider block">
             Checked In
           </span>
           <div className="text-3xl font-black text-emerald-600">{checkedInCount}</div>
-          <p className="text-[11px] text-emerald-700 font-medium">Verified attendance</p>
+          <p className="text-[11px] text-emerald-700 font-medium">Verified in window</p>
         </div>
 
-        {/* No-Shows */}
         <div className="bg-white border border-charcoal-200/80 rounded-2xl p-5 shadow-sm space-y-1">
           <span className="text-[11px] font-bold text-rose-600 uppercase tracking-wider block">
             No-Shows
           </span>
           <div className="text-3xl font-black text-rose-600">{noShowCount}</div>
-          <p className="text-[11px] text-rose-700 font-medium">Forfeited spots</p>
+          <p className="text-[11px] text-rose-700 font-medium">Forfeited after window</p>
         </div>
 
-        {/* Attendance Rate */}
         <div className="bg-white border border-charcoal-200/80 rounded-2xl p-5 shadow-sm space-y-1 col-span-2 lg:col-span-1">
           <span className="text-[11px] font-bold text-charcoal-400 uppercase tracking-wider block">
             Attendance Rate
           </span>
           <div className="text-3xl font-black text-charcoal-900">{attendanceRate}%</div>
           <p className="text-[11px] text-emerald-600 font-semibold">vs 60% industry avg</p>
+        </div>
+      </div>
+
+      {/* TIMINGS DISPLAY CARD */}
+      <div className="bg-white border border-charcoal-200/80 rounded-2xl p-6 shadow-sm space-y-3">
+        <h3 className="text-sm font-bold text-charcoal-900 flex items-center gap-2">
+          <Clock className="w-4 h-4 text-indigo-600" />
+          <span>Listing Timing Rules & Check-In Window</span>
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+          <div className="bg-charcoal-50 p-3.5 rounded-xl border border-charcoal-200/60">
+            <span className="text-charcoal-400 block text-[10px] uppercase font-bold">
+              Reservation Date
+            </span>
+            <span className="font-bold text-charcoal-900">{selectedEvent?.eventDate}</span>
+          </div>
+
+          <div className="bg-charcoal-50 p-3.5 rounded-xl border border-charcoal-200/60">
+            <span className="text-charcoal-400 block text-[10px] uppercase font-bold">
+              Duration Hours
+            </span>
+            <span className="font-bold text-charcoal-900">{selectedEvent?.eventTimeRange}</span>
+          </div>
+
+          <div className="bg-indigo-50 p-3.5 rounded-xl border border-indigo-200/80">
+            <span className="text-indigo-600 block text-[10px] uppercase font-bold">
+              Strict Check-In Window
+            </span>
+            <span className="font-bold text-indigo-900 text-sm">
+              {selectedEvent?.checkInTimeWindow}
+            </span>
+          </div>
         </div>
       </div>
 
@@ -255,9 +276,6 @@ export default function OrganizerDashboardPage() {
             <div className="text-2xl font-black text-charcoal-900 mt-1">
               {depositsLocked} <span className="text-xs font-bold text-indigo-600">MON</span>
             </div>
-            <p className="text-[11px] text-charcoal-500 mt-0.5">
-              Held in contract until attendees check in
-            </p>
           </div>
 
           <div className="bg-emerald-50/70 p-4 rounded-xl border border-emerald-200/60">
@@ -267,9 +285,6 @@ export default function OrganizerDashboardPage() {
             <div className="text-2xl font-black text-emerald-700 mt-1">
               {depositsReleased} <span className="text-xs font-bold text-emerald-600">MON</span>
             </div>
-            <p className="text-[11px] text-emerald-800/80 mt-0.5">
-              Returned to attendees after check-in
-            </p>
           </div>
 
           <div className="bg-rose-50/70 p-4 rounded-xl border border-rose-200/60">
@@ -279,9 +294,6 @@ export default function OrganizerDashboardPage() {
             <div className="text-2xl font-black text-rose-700 mt-1">
               {noShowDeposits} <span className="text-xs font-bold text-rose-600">MON</span>
             </div>
-            <p className="text-[11px] text-rose-800/80 mt-0.5">
-              Policy: {selectedEvent?.policy === "ORGANIZER" ? "Organizer Received" : "Community Pool"}
-            </p>
           </div>
         </div>
       </div>
@@ -290,8 +302,8 @@ export default function OrganizerDashboardPage() {
       <div className="bg-white border border-charcoal-200/80 rounded-2xl overflow-hidden shadow-sm space-y-0">
         <div className="p-5 border-b border-charcoal-200/70 flex items-center justify-between">
           <div>
-            <h3 className="font-bold text-sm text-charcoal-900">Attendee Commitments</h3>
-            <p className="text-xs text-charcoal-500">Live attendees on Monad Testnet</p>
+            <h3 className="font-bold text-sm text-charcoal-900">Attendee & Table Reservations</h3>
+            <p className="text-xs text-charcoal-500">Live commitments on Monad Testnet</p>
           </div>
           <span className="text-xs font-bold text-charcoal-500">
             Showing {INITIAL_ATTENDEES.length} records
@@ -359,13 +371,13 @@ export default function OrganizerDashboardPage() {
         </div>
       </div>
 
-      {/* CREATE EVENT MODAL */}
+      {/* CREATE LISTING MODAL */}
       {isCreateModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-charcoal-950/60 backdrop-blur-md animate-fade-in">
-          <div className="relative w-full max-w-xl bg-white rounded-3xl shadow-2xl border border-white overflow-hidden animate-scale-up max-h-[90vh] flex flex-col">
+          <div className="relative w-full max-w-xl bg-white rounded-3xl shadow-2xl border border-white overflow-hidden max-h-[90vh] flex flex-col">
             <div className="p-6 border-b border-charcoal-100 flex items-center justify-between">
               <h2 className="text-base font-bold text-charcoal-900">
-                Create New Monad Reservation Event
+                Create Listing (Event, Restaurant, Salon)
               </h2>
               <button
                 onClick={() => setIsCreateModalOpen(false)}
@@ -376,15 +388,40 @@ export default function OrganizerDashboardPage() {
             </div>
 
             <form onSubmit={handleCreateEvent} className="p-6 overflow-y-auto space-y-4 text-xs">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-charcoal-800 mb-1">Category Type</label>
+                  <select
+                    value={newCategoryType}
+                    onChange={(e) => setNewCategoryType(e.target.value as CategoryType)}
+                    className="w-full p-2.5 bg-white border border-charcoal-200 rounded-xl font-bold text-indigo-600"
+                  >
+                    <option value="EVENT">Event / Workshop</option>
+                    <option value="RESTAURANT">Restaurant Dining</option>
+                    <option value="SALON">Salon & Spa</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block font-bold text-charcoal-800 mb-1">Tag / Subcategory</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. FINE DINING, TECH WORKSHOP"
+                    value={newCategoryLabel}
+                    onChange={(e) => setNewCategoryLabel(e.target.value)}
+                    className="w-full p-2.5 bg-white border border-charcoal-200 rounded-xl"
+                  />
+                </div>
+              </div>
+
               <div>
-                <label className="block font-bold text-charcoal-800 mb-1">Event Name</label>
+                <label className="block font-bold text-charcoal-800 mb-1">Listing Name / Business Title</label>
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Monad Developer Workshop"
+                  placeholder="e.g. Monad Workshop / Le Petit Gourmet Table"
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
-                  className="w-full p-2.5 bg-white border border-charcoal-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                  className="w-full p-2.5 bg-white border border-charcoal-200 rounded-xl font-medium text-charcoal-900"
                 />
               </div>
 
@@ -392,10 +429,10 @@ export default function OrganizerDashboardPage() {
                 <label className="block font-bold text-charcoal-800 mb-1">Description</label>
                 <textarea
                   rows={2}
-                  placeholder="Short description of the event..."
+                  placeholder="Short description of the event, dining table, or salon service..."
                   value={newDescription}
                   onChange={(e) => setNewDescription(e.target.value)}
-                  className="w-full p-2.5 bg-white border border-charcoal-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                  className="w-full p-2.5 bg-white border border-charcoal-200 rounded-xl"
                 />
               </div>
 
@@ -404,22 +441,33 @@ export default function OrganizerDashboardPage() {
                   <label className="block font-bold text-charcoal-800 mb-1">Date</label>
                   <input
                     type="text"
-                    placeholder="e.g. Tomorrow"
+                    placeholder="e.g. Aug 23, 2026"
                     value={newEventDate}
                     onChange={(e) => setNewEventDate(e.target.value)}
                     className="w-full p-2.5 bg-white border border-charcoal-200 rounded-xl"
                   />
                 </div>
                 <div>
-                  <label className="block font-bold text-charcoal-800 mb-1">Time</label>
+                  <label className="block font-bold text-charcoal-800 mb-1">Reservation Hours</label>
                   <input
                     type="text"
-                    placeholder="e.g. 5:00 PM IST"
-                    value={newEventTime}
-                    onChange={(e) => setNewEventTime(e.target.value)}
+                    placeholder="e.g. 9:00 AM - 4:00 PM IST"
+                    value={newTimeRange}
+                    onChange={(e) => setNewTimeRange(e.target.value)}
                     className="w-full p-2.5 bg-white border border-charcoal-200 rounded-xl"
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="block font-bold text-indigo-700 mb-1">Strict Check-In Window</label>
+                <input
+                  type="text"
+                  placeholder="e.g. 9:30 AM - 11:00 AM IST"
+                  value={newCheckInWindow}
+                  onChange={(e) => setNewCheckInWindow(e.target.value)}
+                  className="w-full p-2.5 bg-indigo-50 border border-indigo-200 rounded-xl font-bold text-indigo-900"
+                />
               </div>
 
               <div>
@@ -427,16 +475,16 @@ export default function OrganizerDashboardPage() {
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Monad Hub, Hyderabad"
+                  placeholder="e.g. Monad Hub / Jubilee Hills"
                   value={newLocation}
                   onChange={(e) => setNewLocation(e.target.value)}
                   className="w-full p-2.5 bg-white border border-charcoal-200 rounded-xl"
                 />
               </div>
 
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-bold text-charcoal-800 mb-1">Capacity</label>
+                  <label className="block font-bold text-charcoal-800 mb-1">Total Capacity (Spots/Tables)</label>
                   <input
                     type="number"
                     value={newCapacity}
@@ -445,34 +493,24 @@ export default function OrganizerDashboardPage() {
                   />
                 </div>
                 <div>
-                  <label className="block font-bold text-charcoal-800 mb-1">Deposit (MON)</label>
+                  <label className="block font-bold text-charcoal-800 mb-1">Commitment Deposit (MON)</label>
                   <input
                     type="text"
                     value={newDeposit}
                     onChange={(e) => setNewDeposit(e.target.value)}
-                    className="w-full p-2.5 bg-white border border-charcoal-200 rounded-xl"
-                  />
-                </div>
-                <div>
-                  <label className="block font-bold text-charcoal-800 mb-1">Check-in Deadline</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. 4:45 PM"
-                    value={newDeadline}
-                    onChange={(e) => setNewDeadline(e.target.value)}
-                    className="w-full p-2.5 bg-white border border-charcoal-200 rounded-xl"
+                    className="w-full p-2.5 bg-white border border-charcoal-200 rounded-xl font-bold text-indigo-600"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block font-bold text-charcoal-800 mb-1">No-Show Policy</label>
+                <label className="block font-bold text-charcoal-800 mb-1">No-Show Deposit Policy</label>
                 <select
                   value={newPolicy}
                   onChange={(e) => setNewPolicy(e.target.value as NoShowPolicy)}
                   className="w-full p-2.5 bg-white border border-charcoal-200 rounded-xl font-semibold"
                 >
-                  <option value="ORGANIZER">Forfeited deposits sent to Organizer</option>
+                  <option value="ORGANIZER">Forfeited deposits sent to Organizer / Business Owner</option>
                   <option value="COMMUNITY_POOL">Forfeited deposits sent to Community Pool</option>
                 </select>
               </div>
@@ -482,7 +520,7 @@ export default function OrganizerDashboardPage() {
                   type="submit"
                   className="w-full bg-charcoal-900 hover:bg-charcoal-800 text-white font-bold py-3.5 rounded-xl text-xs shadow-lg transition-all"
                 >
-                  Publish Event to Monad
+                  Publish Listing to Monad Testnet
                 </button>
               </div>
             </form>

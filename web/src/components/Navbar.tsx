@@ -49,6 +49,13 @@ export function Navbar() {
     { name: "Organizer", href: "/organizer", icon: LayoutDashboard },
   ];
 
+  const handleDisconnect = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDropdownOpen(false);
+    disconnectWallet();
+  };
+
   return (
     <header className="sticky top-0 z-40 w-full border-b border-white/60 bg-white/70 backdrop-blur-xl transition-all duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
@@ -99,11 +106,11 @@ export function Navbar() {
           })}
         </nav>
 
-        {/* Wallet & Network Controls */}
+        {/* Wallet Controls */}
         <div className="flex items-center gap-2.5">
           {account ? (
             <div className="flex items-center gap-2">
-              {/* Network Status Badge */}
+              {/* Network Badge */}
               <button
                 onClick={switchNetwork}
                 className={`hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
@@ -163,14 +170,11 @@ export function Navbar() {
                       </a>
 
                       <button
-                        onClick={() => {
-                          setIsDropdownOpen(false);
-                          disconnectWallet();
-                        }}
-                        className="flex items-center gap-2 w-full px-2.5 py-2 text-xs text-rose-600 hover:bg-rose-50 rounded-lg transition-colors mt-0.5"
+                        onClick={handleDisconnect}
+                        className="flex items-center gap-2 w-full px-2.5 py-2 text-xs text-rose-600 hover:bg-rose-50 rounded-lg transition-colors mt-0.5 font-semibold"
                       >
-                        <LogOut className="w-3.5 h-3.5" />
-                        <span>Disconnect</span>
+                        <LogOut className="w-3.5 h-3.5 text-rose-600" />
+                        <span>Disconnect Wallet</span>
                       </button>
                     </div>
                   </div>

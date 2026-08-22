@@ -27,12 +27,17 @@
   },
   {
     "inputs": [],
-    "name": "CheckInDeadlinePassed",
+    "name": "CheckInNotOpen",
     "type": "error"
   },
   {
     "inputs": [],
-    "name": "DeadlineNotPassed",
+    "name": "CheckInWindowNotClosed",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "CheckInWindowPassed",
     "type": "error"
   },
   {
@@ -205,6 +210,12 @@
       },
       {
         "indexed": false,
+        "internalType": "string",
+        "name": "category",
+        "type": "string"
+      },
+      {
+        "indexed": false,
         "internalType": "uint256",
         "name": "depositAmount",
         "type": "uint256"
@@ -218,13 +229,13 @@
       {
         "indexed": false,
         "internalType": "uint64",
-        "name": "eventTime",
+        "name": "startTime",
         "type": "uint64"
       },
       {
         "indexed": false,
         "internalType": "uint64",
-        "name": "checkInDeadline",
+        "name": "checkInEndTime",
         "type": "uint64"
       },
       {
@@ -355,24 +366,6 @@
         "internalType": "uint256",
         "name": "eventId",
         "type": "uint256"
-      },
-      {
-        "internalType": "address[]",
-        "name": "attendees",
-        "type": "address[]"
-      }
-    ],
-    "name": "batchProcessNoShows",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "eventId",
-        "type": "uint256"
       }
     ],
     "name": "checkIn",
@@ -402,6 +395,11 @@
       },
       {
         "internalType": "string",
+        "name": "category",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
         "name": "description",
         "type": "string"
       },
@@ -417,12 +415,22 @@
       },
       {
         "internalType": "uint64",
-        "name": "eventTime",
+        "name": "startTime",
         "type": "uint64"
       },
       {
         "internalType": "uint64",
-        "name": "checkInDeadline",
+        "name": "endTime",
+        "type": "uint64"
+      },
+      {
+        "internalType": "uint64",
+        "name": "checkInStartTime",
+        "type": "uint64"
+      },
+      {
+        "internalType": "uint64",
+        "name": "checkInEndTime",
         "type": "uint64"
       },
       {
@@ -479,6 +487,11 @@
       },
       {
         "internalType": "string",
+        "name": "category",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
         "name": "description",
         "type": "string"
       },
@@ -493,14 +506,31 @@
         "type": "string"
       },
       {
-        "internalType": "uint64",
-        "name": "eventTime",
-        "type": "uint64"
-      },
-      {
-        "internalType": "uint64",
-        "name": "checkInDeadline",
-        "type": "uint64"
+        "components": [
+          {
+            "internalType": "uint64",
+            "name": "startTime",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "endTime",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "checkInStartTime",
+            "type": "uint64"
+          },
+          {
+            "internalType": "uint64",
+            "name": "checkInEndTime",
+            "type": "uint64"
+          }
+        ],
+        "internalType": "struct Proofin.EventTimings",
+        "name": "timings",
+        "type": "tuple"
       },
       {
         "internalType": "uint256",
@@ -602,6 +632,11 @@
           },
           {
             "internalType": "string",
+            "name": "category",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
             "name": "description",
             "type": "string"
           },
@@ -616,14 +651,31 @@
             "type": "string"
           },
           {
-            "internalType": "uint64",
-            "name": "eventTime",
-            "type": "uint64"
-          },
-          {
-            "internalType": "uint64",
-            "name": "checkInDeadline",
-            "type": "uint64"
+            "components": [
+              {
+                "internalType": "uint64",
+                "name": "startTime",
+                "type": "uint64"
+              },
+              {
+                "internalType": "uint64",
+                "name": "endTime",
+                "type": "uint64"
+              },
+              {
+                "internalType": "uint64",
+                "name": "checkInStartTime",
+                "type": "uint64"
+              },
+              {
+                "internalType": "uint64",
+                "name": "checkInEndTime",
+                "type": "uint64"
+              }
+            ],
+            "internalType": "struct Proofin.EventTimings",
+            "name": "timings",
+            "type": "tuple"
           },
           {
             "internalType": "uint256",
