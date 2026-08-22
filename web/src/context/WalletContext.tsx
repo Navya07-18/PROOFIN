@@ -13,7 +13,7 @@ interface WalletContextType {
   balance: string;
   isConnecting: boolean;
   connectWallet: () => Promise<void>;
-  disconnectWallet: () => void;
+  disconnectWallet: () => Promise<void>;
   switchNetwork: () => Promise<void>;
   events: EventData[];
   reservations: ReservationData[];
@@ -137,10 +137,22 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
 
     setIsConnecting(true);
     try {
-      // Clear manual disconnect flag on explicit connect action
+      // Clear manual disconnect flag
       localStorage.removeItem(LOCAL_STORAGE_KEY_DISCONNECTED);
 
-      const accounts = await window.ethereum.request({
+      let accounts: string[] = [];
+
+      // Force MetaMask popup window on the right side of the screen via wallet_requestPermissions
+      try {
+        await window.ethereum.request({
+          method: "wallet_requestPermissions",
+          params: [{ eth_accounts: {} }],
+        });
+      } catch (permErr: any) {
+        console.log("Permission request handled or fallback to eth_requestAccounts:", permErr);
+      }
+
+      accounts = await window.ethereum.request({
         method: "eth_requestAccounts",
       });
 
@@ -162,18 +174,29 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
           console.warn("User declined network switch");
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to connect wallet:", error);
     } finally {
       setIsConnecting(false);
     }
   };
 
-  const disconnectWallet = () => {
-    // Set manual disconnect flag in storage
+  const disconnectWallet = async () => {
     try {
       localStorage.setItem(LOCAL_STORAGE_KEY_DISCONNECTED, "true");
     } catch (e) {}
+
+    // Revoke permissions if supported by MetaMask to ensure next connect pops up window
+    if (typeof window !== "undefined" && window.ethereum) {
+      try {
+        await window.ethereum.request({
+          method: "wallet_revokePermissions",
+          params: [{ eth_accounts: {} }],
+        });
+      } catch (e) {
+        // Ignored if method not supported in older MetaMask versions
+      }
+    }
 
     setAccount(null);
     setBalance("0.000");
