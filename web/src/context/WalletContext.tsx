@@ -13,7 +13,7 @@ interface WalletContextType {
   balance: string;
   isConnecting: boolean;
   connectWallet: () => Promise<void>;
-  disconnectWallet: () => Promise<void>;
+  disconnectWallet: () => void;
   switchNetwork: () => Promise<void>;
   events: EventData[];
   reservations: ReservationData[];
@@ -140,19 +140,17 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       // Clear manual disconnect flag
       localStorage.removeItem(LOCAL_STORAGE_KEY_DISCONNECTED);
 
-      let accounts: string[] = [];
-
-      // Force MetaMask popup window on the right side of the screen via wallet_requestPermissions
+      // Force MetaMask extension window to pop up on the right side for manual approval
       try {
         await window.ethereum.request({
           method: "wallet_requestPermissions",
           params: [{ eth_accounts: {} }],
         });
-      } catch (permErr: any) {
-        console.log("Permission request handled or fallback to eth_requestAccounts:", permErr);
+      } catch (permError: any) {
+        console.warn("Wallet permissions prompt dismissed or fallback needed:", permError);
       }
 
-      accounts = await window.ethereum.request({
+      const accounts = await window.ethereum.request({
         method: "eth_requestAccounts",
       });
 
@@ -174,29 +172,18 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
           console.warn("User declined network switch");
         }
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error("Failed to connect wallet:", error);
     } finally {
       setIsConnecting(false);
     }
   };
 
-  const disconnectWallet = async () => {
+  const disconnectWallet = () => {
+    // Set manual disconnect flag in storage
     try {
       localStorage.setItem(LOCAL_STORAGE_KEY_DISCONNECTED, "true");
     } catch (e) {}
-
-    // Revoke permissions if supported by MetaMask to ensure next connect pops up window
-    if (typeof window !== "undefined" && window.ethereum) {
-      try {
-        await window.ethereum.request({
-          method: "wallet_revokePermissions",
-          params: [{ eth_accounts: {} }],
-        });
-      } catch (e) {
-        // Ignored if method not supported in older MetaMask versions
-      }
-    }
 
     setAccount(null);
     setBalance("0.000");
