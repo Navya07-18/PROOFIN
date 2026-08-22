@@ -14,9 +14,9 @@ export interface EventData {
   organizer: string;
   organizerName: string;
   imageURI: string;
-  eventDate: string;        // e.g. "Aug 23, 2026"
-  eventTimeRange: string;   // e.g. "9:00 AM - 4:00 PM IST"
-  checkInTimeWindow: string;// e.g. "9:30 AM - 11:00 AM IST"
+  eventDate: string;        // e.g. "23 August 2026 IST"
+  eventTimeRange: string;   // e.g. "9:00 AM IST - 4:00 PM IST"
+  checkInTimeWindow: string;// e.g. "9:30 AM IST - 11:00 AM IST"
   depositAmount: string;    // in MON, e.g. "0.01"
   depositAmountWei: string;
   capacity: number;
@@ -26,6 +26,7 @@ export interface EventData {
   active: boolean;
   policy: NoShowPolicy;
   isFeatured?: boolean;
+  isExpired?: boolean;
 }
 
 export interface ReservationData {

@@ -6,24 +6,22 @@ import { useWallet } from "@/context/WalletContext";
 import { EventCard } from "@/components/EventCard";
 import { ReservationModal } from "@/components/ReservationModal";
 import { GlassCard } from "@/components/GlassCard";
-import { EventData, CategoryType } from "@/types";
+import { EventData } from "@/types";
 import {
   Sparkles,
   ArrowRight,
   ShieldCheck,
-  Zap,
-  CheckCircle2,
-  Calendar,
-  MapPin,
-  Lock,
-  QrCode,
-  Coins,
-  Search,
   PlusCircle,
   Utensils,
   Scissors,
   Ticket,
   Clock,
+  Search,
+  Calendar,
+  MapPin,
+  Users,
+  CheckCircle2,
+  XCircle,
 } from "lucide-react";
 
 export default function HomePage() {
@@ -87,16 +85,16 @@ export default function HomePage() {
             </p>
 
             <p className="text-xs sm:text-sm text-charcoal-500 max-w-lg leading-relaxed">
-              Whether reserving a limited workshop spot, a gourmet dining table, or a VIP salon appointment—PROOFIN locks your MON deposit into an on-chain smart contract and <strong>automatically refunds 100%</strong> when you check in on time.
+              Whether reserving a workshop, dining table, or salon appointment—PROOFIN locks your MON deposit into an on-chain smart contract and <strong>automatically refunds 100%</strong> to your wallet when you check in before deadline.
             </p>
 
-            {/* CTAs */}
+            {/* CTAs with updated button names */}
             <div className="flex flex-wrap items-center gap-3 pt-2">
               <a
                 href="#discovery"
                 className="flex items-center gap-2 bg-charcoal-900 hover:bg-charcoal-800 text-white font-bold px-6 py-3.5 rounded-2xl text-sm shadow-xl shadow-charcoal-900/15 transition-all duration-200 hover:-translate-y-0.5"
               >
-                <span>Explore Listings</span>
+                <span>Explore Events</span>
                 <ArrowRight className="w-4 h-4 text-indigo-300" />
               </a>
 
@@ -105,7 +103,7 @@ export default function HomePage() {
                 className="flex items-center gap-2 bg-white/90 hover:bg-white text-charcoal-900 font-semibold px-5 py-3.5 rounded-2xl text-sm border border-charcoal-200/80 shadow-sm transition-all duration-200 hover:border-indigo-300"
               >
                 <PlusCircle className="w-4 h-4 text-indigo-600" />
-                <span>Create Listing</span>
+                <span>Create Events</span>
               </Link>
             </div>
 
@@ -158,14 +156,14 @@ export default function HomePage() {
                       <div className="flex items-center gap-2">
                         <Calendar className="w-4 h-4 text-indigo-600" />
                         <span className="font-semibold text-charcoal-800">
-                          {featuredEvent.eventDate} ({featuredEvent.eventTimeRange})
+                          {featuredEvent.eventDate} · {featuredEvent.eventTimeRange}
                         </span>
                       </div>
                     </div>
 
                     <div className="flex items-center gap-2 text-indigo-700 font-semibold bg-indigo-50/80 p-2 rounded-lg border border-indigo-100">
                       <Clock className="w-4 h-4 text-indigo-600 flex-shrink-0" />
-                      <span>Check-in Window: {featuredEvent.checkInTimeWindow}</span>
+                      <span>Registration / Check-In Closes: {featuredEvent.checkInTimeWindow.split("-")[1] || featuredEvent.checkInTimeWindow}</span>
                     </div>
 
                     <div className="flex items-center gap-2">
@@ -216,7 +214,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* 2. CATEGORY HIGHLIGHT CARDS (Events, Restaurants, Salons) */}
+      {/* 2. CATEGORY HIGHLIGHT CARDS */}
       <section className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Workshops & Events */}
@@ -226,7 +224,7 @@ export default function HomePage() {
             </div>
             <h3 className="text-base font-bold text-charcoal-900">Workshops & Events</h3>
             <p className="text-xs text-charcoal-600 leading-relaxed">
-              Reserve limited seat tech workshops and hackathons. Lock 0.01 MON, check in between <strong>9:30 AM - 11:00 AM</strong>, and get your deposit refunded automatically.
+              Reserve tech workshops set for <strong>9:00 AM IST - 4:00 PM IST</strong>. Lock 0.01 MON, check in before <strong>11:00 AM IST</strong>, and get your deposit refunded.
             </p>
           </GlassCard>
 
@@ -237,7 +235,7 @@ export default function HomePage() {
             </div>
             <h3 className="text-base font-bold text-charcoal-900">Fine Dining Tables</h3>
             <p className="text-xs text-charcoal-600 leading-relaxed">
-              Eliminate restaurant table no-shows. Reserve 5-course chef tasting tables with a 0.02 MON deposit. Arrive at dinner time to claim your table and unlock your MON.
+              Reserve 5-course chef tasting tables. Lock 0.02 MON deposit. Check in during table arrival window to unlock and refund your MON.
             </p>
           </GlassCard>
 
@@ -248,7 +246,7 @@ export default function HomePage() {
             </div>
             <h3 className="text-base font-bold text-charcoal-900">Salon & Spa Appointments</h3>
             <p className="text-xs text-charcoal-600 leading-relaxed">
-              Book hair styling, spa treatments, and beauty consultations. Lock 0.015 MON, check in at salon reception during your slot, and receive 100% of your deposit back.
+              Book hair styling & spa consultations. Lock 0.015 MON deposit, check in at salon reception, and receive your MON back.
             </p>
           </GlassCard>
         </div>
@@ -259,10 +257,10 @@ export default function HomePage() {
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-charcoal-200/50 pb-6">
           <div>
             <span className="text-xs font-bold uppercase tracking-wider text-indigo-600">
-              Explore Available Reservations
+              Explore Available Events & Reservations
             </span>
             <h2 className="text-2xl sm:text-3xl font-black text-charcoal-900 mt-1">
-              Events, Dining & Salons
+              Events, Dining & Salons (IST Schedule)
             </h2>
           </div>
 
@@ -271,7 +269,7 @@ export default function HomePage() {
             <Search className="w-4 h-4 text-charcoal-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
-              placeholder="Search listings, locations..."
+              placeholder="Search events, locations..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-9 pr-4 py-2 bg-white/80 border border-charcoal-200/70 rounded-xl text-xs text-charcoal-900 placeholder:text-charcoal-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 shadow-sm"
@@ -296,7 +294,7 @@ export default function HomePage() {
           ))}
         </div>
 
-        {/* Listings Grid */}
+        {/* Events Grid */}
         {filteredEvents.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredEvents.map((event) => (
@@ -309,7 +307,7 @@ export default function HomePage() {
           </div>
         ) : (
           <div className="text-center py-16 bg-white/60 rounded-3xl border border-charcoal-200/40 p-8">
-            <p className="text-sm font-semibold text-charcoal-700">No listings found</p>
+            <p className="text-sm font-semibold text-charcoal-700">No events found</p>
             <p className="text-xs text-charcoal-400 mt-1">
               Try adjusting your search query or category filter.
             </p>

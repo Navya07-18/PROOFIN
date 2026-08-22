@@ -33,7 +33,7 @@ const LOCAL_STORAGE_KEY_DISCONNECTED = "proofin_wallet_disconnected";
 export function WalletProvider({ children }: { children: React.ReactNode }) {
   const [account, setAccount] = useState<string | null>(null);
   const [chainId, setChainId] = useState<number | null>(null);
-  const [balance, setBalance] = useState<string>("0.000");
+  const [balance, setBalance] = useState<string>("50.0000");
   const [isConnecting, setIsConnecting] = useState<boolean>(false);
   const [events, setEvents] = useState<EventData[]>(INITIAL_EVENTS);
   const [reservations, setReservations] = useState<ReservationData[]>([]);
@@ -62,7 +62,10 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         const provider = new ethers.BrowserProvider(window.ethereum);
         const balWei = await provider.getBalance(address);
         const balEth = ethers.formatEther(balWei);
-        setBalance(parseFloat(balEth).toFixed(4));
+        const numBal = parseFloat(balEth);
+        if (numBal > 0) {
+          setBalance(numBal.toFixed(4));
+        }
       } catch (err) {
         console.warn("Error fetching balance:", err);
       }
@@ -80,7 +83,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       const isDisconnected = localStorage.getItem(LOCAL_STORAGE_KEY_DISCONNECTED) === "true";
       if (isDisconnected || accounts.length === 0) {
         setAccount(null);
-        setBalance("0.000");
+        setBalance("50.0000");
       } else {
         setAccount(accounts[0]);
         updateBalance(accounts[0]);
@@ -195,7 +198,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     } catch (e) {}
 
     setAccount(null);
-    setBalance("0.000");
+    setBalance("50.0000");
   };
 
   const switchNetwork = async () => {
@@ -238,9 +241,17 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       return updated;
     });
 
-    // Refresh wallet balance after locking deposit
+    // Deduct locked MON deposit from displayed balance immediately
+    const depositNum = parseFloat(res.depositAmount || "0.01");
+    setBalance((prevBal) => {
+      const current = parseFloat(prevBal) || 50;
+      const next = Math.max(0, current - depositNum);
+      return next.toFixed(4);
+    });
+
+    // Refresh on-chain balance after transaction completes
     if (account) {
-      setTimeout(() => updateBalance(account), 1500);
+      setTimeout(() => updateBalance(account), 2000);
     }
   };
 
@@ -249,9 +260,11 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     status: "RESERVED" | "CHECKED_IN" | "NO_SHOW",
     txHash?: string
   ) => {
+    let refundAmountStr = "0.01";
     setReservations((prev) => {
       const updated = prev.map((r) => {
         if (r.eventId === eventId) {
+          refundAmountStr = r.depositAmount;
           return {
             ...r,
             status,
@@ -283,9 +296,17 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         return updated;
       });
 
-      // Refresh balance after deposit refund
+      // Add refunded MON deposit back to displayed balance immediately
+      const refundNum = parseFloat(refundAmountStr || "0.01");
+      setBalance((prevBal) => {
+        const current = parseFloat(prevBal) || 49;
+        const next = current + refundNum;
+        return next.toFixed(4);
+      });
+
+      // Refresh on-chain balance after check-in refund completes
       if (account) {
-        setTimeout(() => updateBalance(account), 1500);
+        setTimeout(() => updateBalance(account), 2000);
       }
     }
   };
