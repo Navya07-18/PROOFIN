@@ -1,7 +1,7 @@
 {
-  "address": "0x51E28e18C3B140B47a747cf9487c67428e219C08",
+  "address": "0x51e28e18c3b140b47a747cf9487c67428e219c08",
   "network": "monadTestnet",
   "chainId": 10143,
-  "explorer": "https://testnet.monadscan.com/address/0x51E28e18C3B140B47a747cf9487c67428e219C08",
+  "explorer": "https://testnet.monadscan.com/address/0x51e28e18c3b140b47a747cf9487c67428e219c08",
   "deployedAt": "2026-08-22T08:00:00.000Z"
 }

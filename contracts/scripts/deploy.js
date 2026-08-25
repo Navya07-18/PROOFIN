@@ -3,6 +3,10 @@ const fs = require("fs");
 const path = require("path");
 
 async function main() {
+  if (!process.env.PRIVATE_KEY) {
+    throw new Error("PRIVATE_KEY must be set in contracts/.env before deploying.");
+  }
+
   console.log("==================================================");
   console.log("🚀 Deploying PROOFIN Contracts to Monad Testnet...");
   console.log("==================================================");
@@ -34,10 +38,13 @@ async function main() {
   try {
     const createTx = await proofin.createEvent(
       "MONAD BLITZ WORKSHOP",
+      "EVENT",
       "Hands-on Web3 builder workshop and hackathon sprint on Monad Testnet. Learn, build, and deploy high-throughput dApps.",
       "Monad Hub, Hyderabad (Room A-101)",
       "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=1200&q=80",
-      eventTime,
+      eventTime - 3600,
+      eventTime + 3600,
+      now + 2 * 3600,
       checkInDeadline,
       depositAmount,
       capacity,

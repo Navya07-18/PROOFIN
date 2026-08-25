@@ -130,16 +130,7 @@ The `Proofin.sol` contract incorporates industry standard security practices:
 - **Configurable No-Show Policy:** Forfeited deposits go directly to event organizers or a community pool.
 
 ---
-
-## 8. About the Project
-
-### The Problem
-> *"Every week, organizers and businesses lose thousands because people reserve spots and don't show up. Traditional systems only record 'User reserved a slot'. There is zero programmable commitment."*
-
-### The Solution
-> *"PROOFIN changes that. We turn reservations into on-chain commitments. Users lock a small MON deposit, get verified at the door, and the smart contract automatically refunds their deposit."*
-
-### Live Monad Testnet Demo
+## 8. Live Monad Testnet Demo
 1. **Open PROOFIN:** View the featured **MONAD BLITZ WORKSHOP** (48/50 spots).
 2. **Connect MetaMask:** Network indicator displays green *Monad Testnet (10143)* badge.
 3. **Reserve Spot:** Click *Reserve Spot (0.01 MON)*. Review commitment modal and confirm transaction in MetaMask.
@@ -148,13 +139,6 @@ The `Proofin.sol` contract incorporates industry standard security practices:
 6. **Instant Settlement:** Confetti triggers, displaying **"# YOU'RE IN 🎉 — 0.01 MON Released"** with Monadscan transaction link.
 7. **Organizer View:** Check Organizer Dashboard to see live 98% attendance rate and updated escrow balances.
 
-### Architecture & Monad Fit
-> *"Built on Next.js 14, Ethers.js, and Solidity 0.8.28. Monad's 10,000 TPS and 800ms finality make micro-escrow seamless without door delays."*
-
-### Conclusion
-> *"We don't treat reservations as passive database entries. PROOFIN makes them programmable commitments that settle automatically."*
-
----
 
 ## 9. Getting Started Locally
 
@@ -164,8 +148,8 @@ The `Proofin.sol` contract incorporates industry standard security practices:
 
 ### 1. Clone & Setup
 ```bash
-git clone https://github.com/your-username/proofin.git
-cd proofin
+git clone https://github.com/Navya07-18/PROOFIN.git
+cd PROOFIN
 ```
 
 ### 2. Run Smart Contract Tests
@@ -174,7 +158,7 @@ cd contracts
 npm install
 npx hardhat test
 ```
-*Expected output: 12 passing unit tests.*
+*Expected output: 5 passing unit tests.*
 
 ### 3. Run Web Application
 ```bash

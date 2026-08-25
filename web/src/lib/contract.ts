@@ -3,10 +3,19 @@ import ProofinABI from "./ProofinABI.json";
 import deployedInfo from "./deployedContract.json";
 import { MONAD_GAS_LIMITS, MONAD_TESTNET } from "./monad";
 
-export const PROOFIN_CONTRACT_ADDRESS =
+const rawAddress = (
   process.env.NEXT_PUBLIC_PROOFIN_CONTRACT_ADDRESS ||
   deployedInfo.address ||
-  "0x51E28e18C3B140B47a747cf9487c67428e219C08";
+  "0x51e28e18c3b140b47a747cf9487c67428e219c08"
+).trim();
+
+export const PROOFIN_CONTRACT_ADDRESS = (() => {
+  try {
+    return ethers.getAddress(rawAddress.toLowerCase());
+  } catch {
+    throw new Error(`Invalid Proofin contract address: ${rawAddress}`);
+  }
+})();
 
 export function getProofinContract(signerOrProvider: ethers.Signer | ethers.Provider) {
   return new ethers.Contract(PROOFIN_CONTRACT_ADDRESS, ProofinABI, signerOrProvider);
@@ -48,25 +57,7 @@ export async function reserveSpotOnChain(
       throw error;
     }
 
-    // 2. If contract method reverts on un-seeded testnet ID, perform real MON deposit tx via MetaMask
-    try {
-      const tx = await signer.sendTransaction({
-        to: PROOFIN_CONTRACT_ADDRESS,
-        value: depositWei,
-        gasLimit: 100000n,
-      });
-
-      const receipt = await tx.wait();
-      return {
-        txHash: receipt?.hash || tx.hash,
-        spotNumber: 49,
-      };
-    } catch (txErr: any) {
-      if (isUserRejection(txErr)) {
-        throw txErr;
-      }
-      throw txErr;
-    }
+    throw error;
   }
 }
 
@@ -98,23 +89,6 @@ export async function checkInOnChain(
       throw error;
     }
 
-    // If checkIn method reverts on testnet state, execute verification tx
-    try {
-      const signerAddress = await signer.getAddress();
-      const tx = await signer.sendTransaction({
-        to: signerAddress,
-        value: 0n,
-        gasLimit: 50000n,
-      });
-      const receipt = await tx.wait();
-      return {
-        txHash: receipt?.hash || tx.hash,
-      };
-    } catch (fallbackErr: any) {
-      if (isUserRejection(fallbackErr)) {
-        throw fallbackErr;
-      }
-      throw fallbackErr;
-    }
+    throw error;
   }
 }
