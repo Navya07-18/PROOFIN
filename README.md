@@ -131,15 +131,15 @@ The `Proofin.sol` contract incorporates industry standard security practices:
 
 ---
 
-## 8. Live 3-Minute Presentation Script
+## 8. About the Project
 
-### ⏱ 0:00 – 0:20 | The Problem
+### The Problem
 > *"Every week, organizers and businesses lose thousands because people reserve spots and don't show up. Traditional systems only record 'User reserved a slot'. There is zero programmable commitment."*
 
-### ⏱ 0:20 – 0:40 | The Solution
+### The Solution
 > *"PROOFIN changes that. We turn reservations into on-chain commitments. Users lock a small MON deposit, get verified at the door, and the smart contract automatically refunds their deposit."*
 
-### ⏱ 0:40 – 2:20 | Live Monad Testnet Demo
+### Live Monad Testnet Demo
 1. **Open PROOFIN:** View the featured **MONAD BLITZ WORKSHOP** (48/50 spots).
 2. **Connect MetaMask:** Network indicator displays green *Monad Testnet (10143)* badge.
 3. **Reserve Spot:** Click *Reserve Spot (0.01 MON)*. Review commitment modal and confirm transaction in MetaMask.
@@ -148,10 +148,10 @@ The `Proofin.sol` contract incorporates industry standard security practices:
 6. **Instant Settlement:** Confetti triggers, displaying **"# YOU'RE IN 🎉 — 0.01 MON Released"** with Monadscan transaction link.
 7. **Organizer View:** Check Organizer Dashboard to see live 98% attendance rate and updated escrow balances.
 
-### ⏱ 2:20 – 2:45 | Architecture & Monad Fit
+### Architecture & Monad Fit
 > *"Built on Next.js 14, Ethers.js, and Solidity 0.8.28. Monad's 10,000 TPS and 800ms finality make micro-escrow seamless without door delays."*
 
-### ⏱ 2:45 – 3:00 | Conclusion
+### Conclusion
 > *"We don't treat reservations as passive database entries. PROOFIN makes them programmable commitments that settle automatically."*
 
 ---
